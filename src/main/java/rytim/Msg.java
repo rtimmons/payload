@@ -5,52 +5,56 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.json.simple.JSONObject;
 
-import java.util.Map;
 import java.util.Optional;
+
+import static rytim.AbstractImmutable.accepts;
+import static rytim.AbstractImmutable.transform;
 
 
 /**
  * @author rtimmons
  * @date 6/20/15
  */
-public class Msg
-    extends AbstractImmutable
+public class Msg // TODO: make this implement Map?
 {
     private final ImmutableMap<String,Object> delegate;
 
     public Msg(Object...entries)
     {
-        Preconditions.checkArgument(entries != null &&
-                                    entries.length % 2 == 0,
+        entries = Preconditions.checkNotNull(entries);
+        Preconditions.checkArgument(entries.length % 2 == 0,
                                     "Need even number of args given %s in [%s]",
                                     entries.length, entries);
         ImmutableMap.Builder<String,Object> b = ImmutableMap.builder();
         for(int i=0; i < entries.length; i+=2)
         {
+            // TODO: move to AbstractImmutable
             Object k = Preconditions.checkNotNull(entries[i],   entries);
             Object v = Preconditions.checkNotNull(entries[i+1], entries);
             Preconditions.checkArgument(k instanceof String,
                                         "Key %s must be string", k);
-
             String key = (String)k;
+
+            v = transform(v); // TODO: this is getting messy...
             Preconditions.checkArgument(accepts(key,v),
                                         "Doesn't accept key %s: %s", key, v);
-
             b.put(key, v);
         }
         this.delegate = b.build();
     }
 
-    public Msg(ImmutableMap<String,Object> vals)
+    // TODO: expose public constructor: make this private and
+    //       add boolean param to indicate if should check
+    private Msg(ImmutableMap<String,Object> vals)
     {
-        Preconditions.checkArgument(accepts("?",vals),"Object type matters - given %s", vals);
         this.delegate = vals;
     }
 
-    public Msg(Map<String, Object> source)
-    {
-        this(ImmutableMap.copyOf(source));
-    }
+    // TODO: this isn't right..need to xform values (recurse)
+//    public Msg(Map<String, Object> source)
+//    {
+//        this(ImmutableMap.copyOf(source));
+//    }
 
     public Msg with(String key, Object value)
     {
@@ -62,7 +66,7 @@ public class Msg
         ImmutableMap.Builder<String,Object> builder =
             ImmutableMap.builder();
 
-        builder.put(key,value);
+        builder.put(key,transform(value));
 
         delegate.forEach((k,v)->{
             if ( !key.equals(k) )

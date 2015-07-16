@@ -7,7 +7,6 @@ import org.junit.Test
  */
 class MsgTest
 {
-    def msg(Map msg) { return new Msg(msg) }
 
     // convenience
     def a = 'a',
@@ -19,7 +18,8 @@ class MsgTest
         };
     ;
 
-    Msg ab = msg(a:a,b:b)
+    Msg ab = new Msg(a,a,
+                     b,b)
 
     def withAB(Closure c,Class<? extends Throwable> t = null)
     {
@@ -142,5 +142,23 @@ class MsgTest
         withAB({it.with(null,a)}, NullPointerException)
         withAB({it.with(null,a)}, NullPointerException)
         withAB({it.with(a,cray)}, IllegalArgumentException)
+    }
+
+    @Test
+    public void testConstructsMList()
+    {
+        def ml = new Msg(a, [1,2,3])
+        def l = ml.get(a).get()
+        assert l instanceof MList
+        assert l.get(0) == 1
+    }
+
+    @Test
+    public void testConstructsChildMsg()
+    {
+        def ml = new Msg(a, new Msg(a,b))
+        def l = ml.get(a).get()
+        assert l instanceof Msg
+        assert l.get(a).get() == b
     }
 }
