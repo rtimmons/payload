@@ -54,15 +54,23 @@ public class Msg
 
     public Msg with(String key, Object value)
     {
+        Preconditions.checkNotNull(key, "Attempt to use null key for value=%s", value);
         Preconditions.checkNotNull(value, "Attempt to put null at key %s", key);
         Preconditions.checkArgument(accepts(key,value),
                                     "Type matters %s: %s", key, value);
-        ImmutableMap<String,Object> map =
-            ImmutableMap.<String,Object>builder()
-                        .putAll(delegate)
-                        .put(key, value)
-                        .build();
-        return new Msg(map);
+
+        ImmutableMap.Builder<String,Object> builder =
+            ImmutableMap.builder();
+
+        builder.put(key,value);
+
+        delegate.forEach((k,v)->{
+            if ( !key.equals(k) )
+            {
+                builder.put(k,v);
+            }
+        });
+        return new Msg(builder.build());
     }
 
     public Msg without(final String key)
